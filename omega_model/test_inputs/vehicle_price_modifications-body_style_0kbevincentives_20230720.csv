@@ -1,0 +1,14 @@
+input_template_name:,vehicle_price_modifications,input_template_version:,0.2,notes:,20240221,
+start_year,sedan_wagon.BEV:price_modification_dollars,cuv_suv_van.BEV:price_modification_dollars,pickup.BEV:price_modification_dollars,sedan_wagon.PHEV:price_modification_dollars,cuv_suv_van.PHEV:price_modification_dollars,pickup.PHEV:price_modification_dollars
+2020,0,0,0,0,0,0
+2023,-2925,-2925,-2925,-2925,-2925,-2925
+2024,-2292,-2292,-2292,-2292,-2292,-2292
+2025,-2292,-2292,-2292,-2292,-2292,-2292
+2026,-2083,-2083,-2083,-2083,-2083,-2083
+2027,-2083,-2083,-2083,-2083,-2083,-2083
+2028,-2083,-2083,-2083,-2083,-2083,-2083
+2029,-1388,-1388,-1388,-1388,-1388,-1388
+2030,-1388,-1388,-1388,-1388,-1388,-1388
+2031,-500,-500,-500,-500,-500,-500
+2032,-500,-500,-500,-500,-500,-500
+2033,0,0,0,0,0,0

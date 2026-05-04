@@ -1,0 +1,14 @@
+input_template_name:,required_sales_share,input_template_version:,0.2,notes:,20230222 no ZEV mandate,
+start_year,sedan_wagon.BEV:minimum_share,sedan_wagon.PHEV:minimum_share,cuv_suv_van.BEV:minimum_share,cuv_suv_van.PHEV:minimum_share,pickup.BEV:minimum_share,pickup.PHEV:minimum_share
+2020,0,0,0,0,0,0
+2021,0,0,0,0,0,0
+2022,0,0,0,0,0,0
+2023,0,0,0,0,0,0
+2024,0,0,0,0,0,0
+2025,0,0,0,0,0,0
+2026,0.1395,0.0855,0.1395,0.0855,0,0
+2027,0.1525,0.0975,0.1525,0.0975,0,0
+2028,0.159,0.106,0.159,0.106,0,0
+2029,0.1711,0.1189,0.1711,0.1189,0,0
+2030,0.1827,0.1323,0.1827,0.1323,0,0
+2031,0.1972,0.1428,0.1972,0.1428,0,0

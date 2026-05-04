@@ -1,0 +1,22 @@
+cff-version: 1.2.0
+message: "If you use this model or input dataset, please cite the repository and the associated manuscript."
+title: "China vehicle carbon-transition policy simulation model"
+authors:
+  - family-names: Xu
+    given-names: Jiarui
+  - family-names: Liu
+    given-names: Haobing
+year: 2026
+license: MIT
+repository-code: "https://github.com/Jerry-Xcq/china-vehicle-carbon-transition-omega"
+preferred-citation:
+  type: article
+  title: "Compliance architecture and upstream coupling shape China's vehicle carbon transition"
+  authors:
+    - family-names: Xu
+      given-names: Jiarui
+    - family-names: Liu
+      given-names: Haobing
+  journal: "Nature Sustainability"
+  year: 2026
+  notes: "Submitted manuscript"
