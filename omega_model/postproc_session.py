@@ -16,12 +16,21 @@ from policy.credit_banking import CreditBank
 from producer.vehicle_annual_data import VehicleAnnualData
 import consumer
 
-# =====================
-# Unit conversion constants for China market (中国市场单位换算常量)
-# =====================
 USD_TO_CNY = 6.9           # 美元转人民币汇率
 MILE_TO_KM = 1.60934       # 英里转公里
 GALLON_TO_LITER = 3.78541  # 加仑转升
+
+USE_CHINA_COST_FACTORS = False
+
+CHINA_COST_FACTORS = {
+    'BEV': 0.427,
+    'ICE': 0.721,
+    'PHEV': 0.409,
+    'sedan_wagon': 0.556,
+    'cuv_suv_van': 0.556,
+    'pickup': 0.32,
+    'vehicle': 0.549,
+}
 
 market_classes = []
 market_categories = []
@@ -804,15 +813,7 @@ def plot_vehicle_cost(calendar_years):
         dict of average vehicle cost data by total, market class and market category
 
     """
-    china_cost_factors = {
-        'BEV': 0.427,
-        'ICE': 0.721,
-        'PHEV': 0.409,
-        'sedan_wagon': 0.556,
-        'cuv_suv_van': 0.556,
-        'pickup': 0.32,
-        'vehicle': 0.549,
-    }
+    china_cost_factors = CHINA_COST_FACTORS if USE_CHINA_COST_FACTORS else {}
 
     average_cost_data = dict()
 
@@ -1070,16 +1071,7 @@ def plot_vehicle_generalized_cost(calendar_years):
         dict of average generalized cost data by total, market class and market category
 
     """
-    # China market cost adjustment factors (中国市场成本调整系数)
-    china_cost_factors = {
-        'BEV': 0.427,           # 动力系统类型
-        'ICE': 0.721,           # 动力系统类型
-        'PHEV': 0.409,          # 动力系统类型
-        'sedan_wagon': 0.556,   # 车身类型
-        'cuv_suv_van': 0.556,   # 车身类型
-        'pickup': 0.32,         # 车身类型
-        'vehicle': 0.549,       # 全市场总计
-    }
+    china_cost_factors = CHINA_COST_FACTORS if USE_CHINA_COST_FACTORS else {}
 
     cost_data = dict()
 
@@ -1164,21 +1156,20 @@ def plot_vehicle_generalized_cost(calendar_years):
         omega_globals.options.output_folder + '%s ALL V GenCost Mkt Cls.png' %
         omega_globals.options.session_unique_name)
 
-    # ============ China Market Adjusted Charts (中国市场调整版本图表) ============
-    # Apply China market cost factors AND convert to CNY (factor * USD_TO_CNY)
+
     adjusted_cost_data = dict()
 
-    # Apply factors to market categories (factor * exchange rate for true CNY)
+    
     for mcat in market_categories:
         if mcat in china_cost_factors:
             adjusted_cost_data[mcat] = [v * china_cost_factors[mcat] * USD_TO_CNY for v in cost_data[mcat]]
         else:
             adjusted_cost_data[mcat] = [v * USD_TO_CNY for v in cost_data[mcat]]
 
-    # Apply factors to market classes (use powertrain factor from market_class_id * exchange rate)
+    
     for mc in market_classes:
         mc_parts = mc.split('.')
-        # Find matching powertrain factor (BEV, ICE, PHEV)
+        
         factor = 1.0
         for part in mc_parts:
             if part in china_cost_factors:
@@ -1186,8 +1177,7 @@ def plot_vehicle_generalized_cost(calendar_years):
                 break
         adjusted_cost_data[mc] = [v * factor * USD_TO_CNY for v in cost_data[mc]]
 
-    # Calculate vehicle total from adjusted individual vehicle costs (真实计算)
-    # 优先使用动力系统类型系数 (BEV, ICE, PHEV)
+    
     powertrain_types = ['BEV', 'ICE', 'PHEV']
     adjusted_cost_data['vehicle'] = []
     for cy in calendar_years:
@@ -1198,15 +1188,15 @@ def plot_vehicle_generalized_cost(calendar_years):
              for v in vehicle_data if v.model_year == cy]
 
         for vehicle_id, market_class_id, cost in vehicle_id_and_market_class_id_and_cost:
-            # Find factor based on powertrain type (BEV, ICE, PHEV) - 优先匹配动力系统类型
+            
             mc_parts = market_class_id.split('.')
             factor = 1.0
-            # 优先查找动力系统类型系数
+            
             for part in mc_parts:
                 if part in powertrain_types and part in china_cost_factors:
                     factor = china_cost_factors[part]
                     break
-            adjusted_cost = cost * factor * USD_TO_CNY  # 乘以系数和汇率
+            adjusted_cost = cost * factor * USD_TO_CNY  
             weighted_cost += vehicle_annual_data[vehicle_id + tuple([0])]['registered_count'] * adjusted_cost
             count += vehicle_annual_data[vehicle_id + tuple([0])]['registered_count']
 

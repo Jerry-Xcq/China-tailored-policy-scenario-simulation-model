@@ -112,35 +112,34 @@ class VehicleTargets(OMEGABase, VehicleTargetsBase):
         Returns:
             Vehicle target CO2e in g/mi.
         """
-        # 将整备质量从 lb 转为 kg
+        
         curb_mass_kg = vehicle.curbweight_lbs * 0.453592  # 1 lb = 0.453592 kg
 
         cache_key = (vehicle.model_year, vehicle.reg_class_id, curb_mass_kg)
 
         if cache_key not in VehicleTargets._data:
 
-            # 和 footprint 版本一样的逻辑：按 start_year 找到适用年份
+            
             start_years = VehicleTargets._data[vehicle.reg_class_id]['start_year']
 
             if len(start_years[start_years <= vehicle.model_year]) > 0:
                 model_year = max(start_years[start_years <= vehicle.model_year])
 
-                # 这里的 coefficients 来自 CSV 中 (reg_class_id, start_year) 那一行
+                
                 coefficients = VehicleTargets._data[vehicle.reg_class_id, model_year]
 
-                # 注意：这里假定 CSV 里有 cm_min_kg / cm_max_kg 两个字段，
-                # 和 footprint 的 fp_min / fp_max 完全平行，只是含义变成质量
+                
                 cm_min = coefficients['cm_min_kg']
                 cm_max = coefficients['cm_max_kg']
 
                 if curb_mass_kg <= cm_min:
-                    # 低于下限时，目标取 a_coeff（常数段）
+                    
                     target_co2e_gpmi = coefficients['a_coeff']
                 elif curb_mass_kg > cm_max:
-                    # 高于上限时，目标取 b_coeff（常数段）
+                    
                     target_co2e_gpmi = coefficients['b_coeff']
                 else:
-                    # 中间区间按线性函数： target = c_coeff * mass_kg + d_coeff
+                    
                     target_co2e_gpmi = curb_mass_kg * coefficients['c_coeff'] + coefficients['d_coeff']
 
                 VehicleTargets._data[cache_key] = target_co2e_gpmi
@@ -184,9 +183,7 @@ class VehicleTargets(OMEGABase, VehicleTargetsBase):
     @staticmethod
     def calc_target_co2e_Mg(vehicle, sales_variants=None):
         """
-        Calculate vehicle target CO2e Mg as a function of the vehicle, the standards and optional sales options.
-        计算车辆的生命周期CO2e排放总量（Mg）
-        Includes the effect of production multipliers.
+       
 
         See Also:
 
@@ -227,10 +224,7 @@ class VehicleTargets(OMEGABase, VehicleTargetsBase):
     @staticmethod
     def calc_cert_co2e_Mg(vehicle, co2_gpmi_variants=None, sales_variants=1):
         """
-        Calculate vehicle cert CO2e Mg as a function of the vehicle, the standards, CO2e g/mi options and optional sales
-        options.
-        计算车辆的认证CO2e排放总量（Mg）
-        Includes the effect of production multipliers.
+        
 
         See Also:
 
@@ -294,7 +288,7 @@ class VehicleTargets(OMEGABase, VehicleTargetsBase):
 
         input_template_name = __name__
         input_template_version = 0.11
-        #改成CM版本的目标输入文件
+        
         input_template_columns = {
             'start_year', 'reg_class_id',
             'cm_min_kg', 'cm_max_kg',

@@ -1,4 +1,4 @@
-"""
+﻿"""
 
 OMEGA top level code
 
@@ -244,11 +244,7 @@ def update_cross_subsidy_log_data(producer_decision_and_response, calendar_year,
     producer_decision_and_response['share_convergence_error'] = share_convergence_error
 
 
-# =============================================================================
-# NEV 积分补齐相关函数（解决 ICE→BEV/PHEV 克隆导致 nev_credit_per_vehicle 缺失的问题）
-# =============================================================================
 
-# 默认 BEV 积分均值（当无法按公式计算时使用）
 DEFAULT_BEV_NEV_CREDIT = 0.9
 
 
@@ -256,17 +252,7 @@ def calc_bev_nev_credit_from_range_mi(range_mi):
     """
     Calculate BEV single-vehicle NEV credit from onroad charge-depleting range (miles).
 
-    根据中国 NEV 积分政策公式计算 BEV 单车积分：
-        R_km = range_mi * 1.60934
-        S(R): 标准车型积分
-            - R < 100 km → 0
-            - 100 <= R < 150 km → 0.3
-            - R >= 150 km → 0.0017 * R + 0.15, 且 S <= 1.2
-        K_range(R): 里程调整系数
-            - 100-150 km → 0.7
-            - 150-200 km → 0.8
-            - 200-300 km → 0.9
-            - >= 300 km → 1.0
+    
 
     Args:
         range_mi (float): onroad charge-depleting range in miles
@@ -324,17 +310,7 @@ def resolve_nev_credit_for_oem_year(compliance_id, calendar_year):
     """
     Resolve/recalculate nev_credit_per_vehicle for BEV/PHEV vehicles of a specific OEM and year.
 
-    在 Pass1（第二轮）每个车企每年模拟结束后、存储 NEV 数据前调用，用于：
-    1. 对 BEV：如果 nev_credit_per_vehicle == 100（sentinel 值），则按公式用 onroad_charge_depleting_range_mi 计算；
-       若 range 仍为 0/None/NaN 或计算出错，则回退为默认均值 DEFAULT_BEV_NEV_CREDIT (0.9)。
-       注意：如果里程 <100km 按公式算出 0 分，这是合法结果，不会 fallback。
-    2. 对 PHEV：如果 nev_credit_per_vehicle 为 0/None/NaN，则补成 0.5。
-
-    只处理指定 compliance_id 和 calendar_year 的车辆，不影响其他车企/年份的车辆。
-    不影响非克隆车辆已经存在的有效 nev_credit_per_vehicle。
-
-    异常保护：任何计算过程中的异常都会被捕获，并使用默认值处理。
-
+    
     Args:
         compliance_id (str): 车企 ID
         calendar_year (int): 模型年份
@@ -415,13 +391,7 @@ def _calc_nev_actuals_and_traditional_volume(compliance_id, calendar_year):
     """
     Calculate NEV credit totals and traditional vehicle volume for the given OEM/year.
 
-    使用 fueling_class 来区分 NEV 车和传统车：
-    - BEV/PHEV: 计入 nev_actual（按 credits × volume）
-    - ICE/HEV/FCV 等其他: 计入 trad_volume
-
-    注意：
-    - initial_registered_count 在每年模拟中都会被更新为当年的销量
-    - BEV/PHEV 即使 credits = 0（如里程 <100km），也不计入传统车产量
+   
 
     Args:
         compliance_id (str): manufacturer ID
@@ -441,26 +411,21 @@ def _calc_nev_actuals_and_traditional_volume(compliance_id, calendar_year):
         credits = getattr(veh, 'nev_credit_per_vehicle', 0.0) or 0.0
         volume = getattr(veh, 'initial_registered_count', 0.0) or 0.0
 
-        # 使用 fueling_class 判断是否为 NEV 车（BEV/PHEV）
-        # 这样即使 credits = 0（如里程 <100km 的 BEV），也不会被当作传统车
+        
         if fueling_class in ('BEV', 'PHEV'):
             nev_actual += credits * volume
         else:
-            # ICE, HEV 等其他车型计入传统车产量
+            
             trad_volume += volume
 
     return nev_actual, trad_volume
 
 
-# GHG（CAFC-CO2）中国语义处理：使用历史正积分抵扣当前年缺口
 def _process_china_ghg_for_year(compliance_id, calendar_year, raw_ghg_credit_Mg, credit_bank):
     """
     Process GHG credits for a single OEM/year using China semantics.
 
-    **China Carryforward Rules:**
-    - Credits are discounted by 0.9 per year: effective = original * (0.9 ** age)
-    - Credits expire after 3 years (configurable in ghg_credit_params.csv)
-    - Oldest credits (soonest to expire) are consumed first
+    
 
     Args:
         compliance_id (str): OEM ID
@@ -477,7 +442,7 @@ def _process_china_ghg_for_year(compliance_id, calendar_year, raw_ghg_credit_Mg,
     used_from_bank = 0.0
 
     if deficit > 0:
-        # 使用折扣后的有效值抵扣缺口，先到期先用
+        
         used_from_bank = credit_bank.use_positive_credits_Mg(calendar_year, deficit, apply_discount=True)
 
     ghg_after_bank = raw_ghg_credit_Mg + used_from_bank
@@ -489,16 +454,7 @@ def _perform_china_dual_credit_settlement(credit_banks, nev_credit_banks):
     """
     Perform China dual-credit system settlement after all OEMs complete production decisions.
 
-    This function replays every model year sequentially after all OEMs have finished Pass 1 so that:
-        * Historical GHG credits are applied year-by-year (oldest first)
-        * NEV national clearing is performed for each year using all OEM data
-        * Remaining NEV credits can offset CAFC-CO2 deficits
-        * Only positive CAFC-CO2 credits are stored (negative deficits do not carry forward)
-
-    **Multiprocessing Support:**
-        This function rebuilds required data from ManufacturerAnnualData._data, which is properly
-        merged from all subprocess results. This ensures correct operation in both single-process
-        and multi-process modes.
+    
 
     Args:
         credit_banks (dict): {compliance_id: CreditBank}
@@ -514,18 +470,14 @@ def _perform_china_dual_credit_settlement(credit_banks, nev_credit_banks):
     from policy.credit_banking import CreditBank
     from policy.nev_credit_banking import NEVCreditBank
 
-    # =========================================================================
-    # 从 ManufacturerAnnualData._data 重建结算所需数据（支持多进程）
-    # =========================================================================
-    # 在多进程模式下，omega_globals.china_dual_credit_records 不会被正确传递，
-    # 但 ManufacturerAnnualData._data 会被正确合并，因此从中重建数据
+    
     china_records = {}
     for mad in ManufacturerAnnualData._data:
         model_year = mad.get('model_year')
         compliance_id = mad.get('compliance_id')
         if model_year is None or compliance_id is None:
             continue
-        # 跳过 consolidated_OEM（Pass 0 的数据）
+        
         if compliance_id == 'consolidated_OEM':
             continue
 
@@ -549,19 +501,17 @@ def _perform_china_dual_credit_settlement(credit_banks, nev_credit_banks):
             'nev_balance_raw': nev_balance_raw
         }
 
-    # 如果没有有效数据，直接返回
+    
     if not china_records:
         omega_log.logwrite("\n=== China Dual-Credit Settlement: No data to process ===", echo_console=True)
         return
 
     omega_log.logwrite("\n=== China Dual-Credit Settlement (Pass 1 Replay) ===", echo_console=True)
 
-    # 初始化CSV数据收集列表
+    
     csv_data_rows = []
 
-    # 重新初始化信用银行（从输入文件恢复初始状态），准备按年份重放
-    # 注意：credit_banks 中可能混入了年份键（整数类型）和 'total' 键，需要过滤掉
-    # 只保留真正的车企 ID（字符串类型且不是 'total'）
+    
     valid_compliance_ids = [cid for cid in credit_banks.keys() 
                             if isinstance(cid, str) and cid != 'total']
     
@@ -586,26 +536,26 @@ def _perform_china_dual_credit_settlement(credit_banks, nev_credit_banks):
     for calendar_year in calendar_years:
         omega_log.logwrite("\n--- Year %d ---" % calendar_year, echo_console=True)
 
-        # 更新信用银行年龄（GHG 和 NEV）
+        
         for cid in all_compliance_ids:
             credit_banks[cid].update_credit_age(calendar_year)
             if cid in nev_credit_banks:
                 nev_credit_banks[cid].update_credit_age(calendar_year)
 
-        # 重新计算各 OEM 的 nev_balance_before_trade（使用当前 NEV 银行的结转，含折扣）
+        
         year_nev_balances = {}
         for cid in all_compliance_ids:
             record = china_records.get(calendar_year, {}).get(cid, {})
             nev_balance_raw = record.get('nev_balance_raw', 0.0)
-            # NEV carry_in 是折扣后的有效值
+            
             carry_in = nev_credit_banks[cid].get_available_credits(calendar_year, apply_discount=True) if cid in nev_credit_banks else 0.0
             balance_before_trade = carry_in + nev_balance_raw
             year_nev_balances[cid] = balance_before_trade
             
-            # 如果当年有新的 NEV 正积分，添加到银行
+            
             if nev_balance_raw > 0 and cid in nev_credit_banks:
                 nev_credit_banks[cid].add_credit(calendar_year, nev_balance_raw)
-            # 更新 ManufacturerAnnualData 以便 perform_nev_clearing_for_year 读取
+            
             ManufacturerAnnualData.update_nev_data(
                 calendar_year, cid,
                 record.get('nev_actual', 0.0),
@@ -614,16 +564,12 @@ def _perform_china_dual_credit_settlement(credit_banks, nev_credit_banks):
                 overwrite_existing=True
             )
 
-        # =====================================================================
-        # Step 1: NEV 全国清算（满足 NEV 比例要求，跨车企交易）
-        # =====================================================================
+        
         nev_clearing_results = perform_nev_clearing_for_year(
             calendar_year, ManufacturerAnnualData._data, nev_credit_banks
         )
 
-        # =====================================================================
-        # Step 2: 各 OEM 使用历史 GHG 正积分抵扣当年 CAFC-CO2 缺口
-        # =====================================================================
+        
         ghg_after_bank_dict = {}  # {compliance_id: ghg_after_bank}
         used_from_bank_dict = {}  # {compliance_id: used_from_bank}
         raw_ghg_credit_dict = {}  # {compliance_id: raw_ghg_credit}
@@ -634,27 +580,22 @@ def _perform_china_dual_credit_settlement(credit_banks, nev_credit_banks):
             raw_ghg_credit = record.get('raw_ghg_credit', 0.0)
             raw_ghg_credit_dict[compliance_id] = raw_ghg_credit
 
-            # 用历史 GHG 正积分抵扣当年缺口
+            
             ghg_after_bank, used_from_bank = _process_china_ghg_for_year(
                 compliance_id, calendar_year, raw_ghg_credit,
                 credit_banks[compliance_id])
 
             ghg_after_bank_dict[compliance_id] = ghg_after_bank
             used_from_bank_dict[compliance_id] = used_from_bank
-            # 记录使用历史正积分后仍剩余的 CAFC 缺口（正值）
+            
             cafc_deficits_after_bank[compliance_id] = max(0.0, -ghg_after_bank)
 
-        # =====================================================================
-        # Step 3: NEV 抵偿 CAFC-CO2 缺口（跨车企交易）
-        # 中国现行政策：车企可以购买其他车企的多余 NEV 积分来抵偿本车企的 CAFC-CO2 负积分
-        # =====================================================================
+        
         nev_cafc_clearing_results = perform_nev_cafc_clearing_for_year(
             calendar_year, nev_clearing_results, cafc_deficits_after_bank
         )
 
-        # =====================================================================
-        # Step 4: 汇总各 OEM 的最终结果
-        # =====================================================================
+        
         for compliance_id in all_compliance_ids:
             record = china_records.get(calendar_year, {}).get(compliance_id, {})
             raw_ghg_credit = raw_ghg_credit_dict[compliance_id]
@@ -680,22 +621,22 @@ def _perform_china_dual_credit_settlement(credit_banks, nev_credit_banks):
                 'nev_sold_for_cafc': 0.0
             })
 
-            # NEV 抵偿 CAFC 的总量（本车企 + 购买）
+            
             nev_Mg_used = nev_cafc_result.get('total_nev_Mg_used', 0.0)
             remaining_nev_points = nev_cafc_result.get('remaining_nev_points', 0.0)
 
-            # 最终 GHG 余额（使用历史正积分 + NEV 抵偿后）
+            
             ghg_after_nev = ghg_after_bank + nev_Mg_used
             final_positive_credit = max(0.0, ghg_after_nev)
 
-            # 存入 GHG 银行（只存正积分）
+            
             credit_banks[compliance_id].add_positive_credit_only(calendar_year, final_positive_credit)
 
-            # 更新 NEV 银行（剩余 NEV 正积分可用于下年，消耗已卖出的积分）
+            
             if compliance_id in nev_credit_banks:
                 nev_credit_banks[compliance_id].update_balance_after_clearing(remaining_nev_points, calendar_year)
 
-            # 更新合规标记和完整的 GHG 积分流转记录
+            
             ManufacturerAnnualData.update_cafc_nev_results(
                 calendar_year, compliance_id,
                 raw_ghg_credit=raw_ghg_credit,
@@ -734,8 +675,7 @@ def _perform_china_dual_credit_settlement(credit_banks, nev_credit_banks):
                  nev_result.get('nev_requirement_compliant', True))
             )
 
-            # 收集CSV数据
-            # 辅助函数：格式化数值，整数显示为整数，小数保留一位
+            
             def fmt_num(val):
                 rounded = round(val, 1)
                 if rounded == int(rounded):
@@ -762,11 +702,11 @@ def _perform_china_dual_credit_settlement(credit_banks, nev_credit_banks):
                 'Compliant_NEV': str(nev_result.get('nev_requirement_compliant', True)).lower()
             })
 
-            # 更新 NEV 清算结果（添加 CAFC 抵偿相关字段）
+            
             nev_result['own_nev_used_for_cafc_Mg'] = own_nev_used
             nev_result['bought_nev_for_cafc_Mg'] = bought_nev
             nev_result['nev_sold_for_cafc'] = sold_nev_for_cafc
-            nev_result['nev_remaining_after_cafc_offset'] = remaining_nev_points  # NEV 抵偿 CAFC 后剩余的 NEV 正积分
+            nev_result['nev_remaining_after_cafc_offset'] = remaining_nev_points  
             ManufacturerAnnualData.update_nev_clearing_results(calendar_year, compliance_id, nev_result)
 
     omega_log.logwrite("\n=== China Dual-Credit Settlement Complete ===\n", echo_console=True)
@@ -916,19 +856,15 @@ def run_compliance_id(compliance_id, pass_num, cumulative_battery_GWh, credit_ba
                                                   pre_production_vehicles,
                                                   producer_decision_and_response)
 
-        # Pass 1 with NEV: 计算并存储 NEV 数据到 ManufacturerAnnualData
-        # 注意：不再使用 china_dual_credit_records，结算时直接从 ManufacturerAnnualData 重建数据
-        # 这样可以支持多进程模式（ManufacturerAnnualData._data 会被正确合并）
+        
         if pass_num > 0 and nev_credit_banks is not None and omega_globals.options.NEVRequirements:
-            # 在计算 NEV 积分前，先补齐/重算本车企本年克隆车辆的 nev_credit_per_vehicle
-            # 这样存入 ManufacturerAnnualData 的 nev_actual 就是正确的值
+            
             resolve_nev_credit_for_oem_year(compliance_id, calendar_year)
             nev_actual, trad_volume = _calc_nev_actuals_and_traditional_volume(compliance_id, calendar_year)
             nev_target_ratio = omega_globals.options.NEVRequirements.get_target_ratio(calendar_year)
             nev_target = nev_target_ratio * trad_volume
             nev_balance_raw = nev_actual - nev_target
-            # 存储到 ManufacturerAnnualData，供后续双积分结算使用
-            # nev_balance_before_trade 字段暂时存储 nev_balance_raw，真正的结转逻辑在 replay 阶段处理
+            
             ManufacturerAnnualData.update_nev_data(calendar_year, compliance_id,
                                                    nev_actual, nev_target, nev_balance_raw)
 
@@ -936,8 +872,7 @@ def run_compliance_id(compliance_id, pass_num, cumulative_battery_GWh, credit_ba
             omega_globals.cumulative_battery_GWh['total'] += production_battery_gigawatthours
             omega_globals.cumulative_battery_GWh[calendar_year] = omega_globals.cumulative_battery_GWh['total']
 
-        # Pass 0: 使用原有 EPA 语义的 handle_credit
-        # Pass 1 with NEV: 暂存数据，稍后统一在中国双积分结算中处理
+        
         if pass_num == 0 or nev_credit_banks is None or not omega_globals.options.NEVRequirements:
             credit_banks[compliance_id].handle_credit(calendar_year, total_credits_co2e_megagrams)  # CU RV
 
@@ -1010,8 +945,7 @@ def run_producer_consumer(pass_num, manufacturer_annual_data_table):
     credit_banks = dict()
     nev_credit_banks = dict() if (pass_num > 0 and omega_globals.options.NEVRequirements) else None
 
-    # 注意：不再初始化 omega_globals.china_dual_credit_records
-    # 双积分结算时直接从 ManufacturerAnnualData._data 重建数据（支持多进程）
+    
 
     if omega_globals.options.multiprocessing and pass_num > 0:
         results = []
@@ -1053,16 +987,12 @@ def run_producer_consumer(pass_num, manufacturer_annual_data_table):
             omega_globals.options.PowertrainCost.cost_tracker.update(cid_cost_tracker)
 
     else:
-        for compliance_id in Vehicle.compliance_ids: #如果是不合并生产商则是遍历所有车企
+        for compliance_id in Vehicle.compliance_ids: 
             run_compliance_id(compliance_id, pass_num, omega_globals.cumulative_battery_GWh, credit_banks,
                               manufacturer_annual_data_table, iteration_log, nev_credit_banks)
 
-    # =====================================================================
-    # Pass 1: NEV 清算 + NEV 抵偿 CAFC-CO2 + 中国版 CreditBank 处理
-    # =====================================================================
+    
     if pass_num > 0 and nev_credit_banks is not None and omega_globals.options.NEVRequirements:
-        # 注意：克隆车辆的 nev_credit_per_vehicle 已经在每个车企每年的 run_compliance_id 中处理过了
-        # （在 _calc_nev_actuals_and_traditional_volume 之前调用 resolve_nev_credit_for_oem_year）
         _perform_china_dual_credit_settlement(credit_banks, nev_credit_banks)
 
     iteration_log_df = pd.DataFrame(iteration_log)
@@ -1079,13 +1009,7 @@ def run_producer_consumer(pass_num, manufacturer_annual_data_table):
 def calc_cross_subsidy_metrics(mcat, cross_subsidy_group, producer_decision, cross_subsidy_options_and_response):
     """
     Calculate cross-subsidy metrics (prices and share deltas).
-    这个函数在交叉补贴的搜索循环中扮演着**“裁判员”的角色。在 create_cross_subsidy_options 生成了一系列价格方案，并且 SalesShare.calc_shares 计算出了消费者对这些价格的反应之后，此函数被调用
-    Args:
-        mcat (str): market category, e.g. 'hauling' / 'non_hauling'
-        cross_subsidy_group (list): list of cross-subsidized market classes, e.g. ['hauling.BEV', 'hauling.ICE']
-        producer_decision (Series): result of producer compliance search, *without* consumer response
-        cross_subsidy_options_and_response (DataFrame): dataframe containing cross subsidy options and response
-    它的核心任务是评估每一个价格方案的优劣程度**，并计算出两个关键的“误差”指标，这两个指标将共同决定哪个价格方案是当前迭代中的最佳选择。
+    
     Returns:
         Nothing, updates ``cross_subsidy_options_and_response``
 
@@ -1096,7 +1020,7 @@ def calc_cross_subsidy_metrics(mcat, cross_subsidy_group, producer_decision, cro
     _cross_subsidy_options_and_response['average_ALT_cross_subsidized_price_%s' % mcat] = 0
     _cross_subsidy_options_and_response['abs_share_delta_%s' % mcat] = 0
 
-    if mcat == '':#这是一个特殊情况。当 mcat 为空字符串 '' 时，表示当前正在处理的是整个市场的顶层节点。在顶层，消费者总份额自然是100%，即1.0
+    if mcat == '':
         _cross_subsidy_options_and_response['consumer_abs_share_frac_%s' % mcat] = 1.0
         cross_subsidy_options_and_response['consumer_abs_share_frac_%s' % mcat] = 1.0
 
@@ -1139,13 +1063,7 @@ def iterate_producer_cross_subsidy(calendar_year, compliance_id, best_producer_d
                                    candidate_mfr_composite_vehicles, iteration_log, producer_consumer_iteration_num,
                                    producer_market_classes, producer_decision, strategic_target_offset_Mg):
     """
-    Perform producer pricing cross-subsidy iteration.  Cross-subsidy maintains the total average price, as well
-    as average price by non-responsive market categories.  The goal is to achieve convergence between producer and
-    consumer desired absolute market class shares, within a tolerance.  The cross-subsidy is implemented through
-    price multipliers, the minimum and maximum range of which are user inputs (e.g. 0.95 -> 1.05).  The initial range
-    of multipliers is the full span from min to max, subsequent iterations tighten the range and hone in on the
-    multipliers that provide the most convergent result while maintaining the average prices mentioned above.
-    通过调整不同车型的价格（即交叉补贴），来找到一个能让“生产者意愿”和“消费者选择”达成一致的均衡点
+   
     Args:
         calendar_year (int): calendar year of the iteration
         compliance_id (str): manufacturer name, or 'consolidated_OEM'
@@ -1172,7 +1090,7 @@ def iterate_producer_cross_subsidy(calendar_year, compliance_id, best_producer_d
     cross_subsidy_options_and_response = pd.DataFrame()
 
     market_class_tree = omega_globals.options.MarketClass.get_market_class_tree()
-    # 2. 计算交叉补贴选项和消费者响应
+    
     cross_subsidy_options_and_response, iteration_log = \
         calc_cross_subsidy_options_and_response(calendar_year, market_class_tree, compliance_id, producer_decision,
                                                 cross_subsidy_options_and_response, producer_consumer_iteration_num,

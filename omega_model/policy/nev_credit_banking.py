@@ -43,11 +43,10 @@ print('importing %s' % __file__)
 from omega_model import *
 
 
-# NEV 积分转换为 Mg CO2 的系数（占位符，后续需根据政策调整）
-# TODO: 这个转换系数应该从配置文件读取，或者按年份/车型区分
+
 MG_PER_NEV_POINT = 1.0  # 1 NEV 积分 = 1 Mg CO2（占位符）
 
-# NEV 积分结转参数
+
 NEV_CARRYFORWARD_YEARS = 3   # 正积分可结转年限
 NEV_CARRYFORWARD_DISCOUNT = 0.5  # 每年结转折扣系数：effective = original * (0.5 ** age)
 
@@ -56,7 +55,7 @@ class NEVCreditBank(OMEGABase):
     """
     Tracks per-manufacturer NEV credit balances across model years.
 
-    **China Dual-Credit Semantics (中国版语义):**
+    
 
     - Only positive credits are stored in the credit bank (DataFrame)
     - Negative credits (deficits) do NOT carry forward; they are cleared annually
@@ -314,8 +313,7 @@ def perform_nev_clearing_for_year(model_year, manufacturer_annual_data, nev_cred
     """
     Perform NEV national clearing for a single model year across all OEMs.
     
-    NEV 市场假设完全有效（NEV_CME = 1），所有负积分都可以通过购买正积分解决，
-    前提是全国总正积分 >= 总负积分。
+   
 
     Args:
         model_year (int): the model year to clear
@@ -389,11 +387,7 @@ def perform_nev_clearing_for_year(model_year, manufacturer_annual_data, nev_cred
             bought = deficit[cid] * clear_ratio
             remaining_deficit = deficit[cid] - bought
             
-            # 清算后余额：
-            # - 正积分 OEM：全部卖出后余额为 0
-            # - 负积分 OEM：部分抵偿后余额仍为 0（remaining_deficit 表示未解决的缺口）
-            # 注意：这里 balance_after 表示"可用于后续抵偿 CAFC 的 NEV 正积分"
-            # 在不完全清算情况下，所有正积分都被用于满足 NEV 要求本身，无剩余
+            
             balance_after = 0.0  # 所有正积分都已卖出
 
             # 只有 remaining_deficit == 0 才合规
@@ -442,15 +436,7 @@ def perform_nev_cafc_clearing_for_year(model_year, nev_clearing_results, cafc_de
     """
     Perform cross-OEM NEV-to-CAFC offset for a single model year.
 
-    中国现行政策：车企可以购买其他车企的多余 NEV 积分来抵偿本车企的 CAFC-CO2 负积分。
-
-    **处理顺序：**
-    1. 优先使用本车企的剩余 NEV 正积分抵偿本车企的 CAFC-CO2 缺口
-    2. 若本车企 NEV 正积分不足，从其他车企购买（全国 NEV 正积分池）
-
-    **假设：**
-    - NEV-to-CAFC 市场完全有效（所有可用的 NEV 正积分都可以用于交易）
-    - 转换系数使用 MG_PER_NEV_POINT（1 NEV 积分 = 1 Mg CO2，占位符）
+    
 
     Args:
         model_year (int): the model year being processed
