@@ -1,6 +1,6 @@
-# China vehicle carbon-transition policy simulation model
+# China-tailored policy-scenario simulation model
 
-This repository contains the China-tailored vehicle policy simulation model and input data used to support the manuscript:
+This repository contains the China-tailored LDV policy simulation model and input data used to support the manuscript:
 
 **Compliance architecture and upstream coupling shape China's vehicle carbon transition**  
 Jiarui Xu and Haobing Liu  
@@ -17,7 +17,6 @@ Conceptually informed by the U.S. EPA OMEGA framework; this repository implement
 |-- README.md
 |-- CITATION.cff
 |-- LICENSE
-|-- requirements.txt
 `-- omega_model/
     |-- omega.py                         # Standalone model entry point
     |-- __init__.py                      # OMEGASessionSettings and default run configuration
@@ -41,7 +40,7 @@ The manuscript simulations were prepared on:
 - Windows 11
 - Python 3.11.5 from Anaconda3
 
-The core Python dependencies are listed in `requirements.txt`:
+The core Python dependencies are:
 
 ```text
 numpy
@@ -57,7 +56,7 @@ Clone or download the repository, then create a clean Python environment:
 ```bash
 conda create -n omega-cn python=3.11.5
 conda activate omega-cn
-pip install -r requirements.txt
+pip install numpy pandas matplotlib scipy
 ```
 
 No external database is required. The `omega_model/test_inputs/` directory contains the CSV inputs used by the model.
@@ -163,7 +162,7 @@ Upstream fuel and electricity carbon-emission factors are configured in:
 omega_model/test_inputs/policy_fuels_20230711.csv
 ```
 
-For electricity sensitivity cases, edit the `upstream_co2e_grams_per_unit` values for rows where `fuel_id` is `electricity`. The file also contains fuel-specific direct and upstream factors for gasoline, diesel and hydrogen.
+For electricity sensitivity cases, edit the `upstream_co2e_grams_per_unit` values for rows where `fuel_id` is `electricity`.
 
 ## Input Data Description
 
@@ -176,7 +175,7 @@ The `omega_model/test_inputs/` directory contains all input data required by the
 - Cost and technology inputs: `powertrain_cost_frm_*`, `glider_cost_*`, `mass_scaling_*`, `producer_generalized_cost-*`.
 - Vehicle use, survival and on-road calculations: `annual_vmt_*`, `reregistration_*`, `onroad_fuels_*`, `onroad_vehicle_calculations_*`.
 
-Each CSV includes an `input_template_name` and `input_template_version` row used by the model's input validation and run metadata.
+Dates embedded in input filenames are file labels and should not be interpreted as the update dates or data vintages of the underlying inputs. Several input files were updated or China-tailored for the present analysis while retaining the original OMEGA-style filename suffixes, `input_template_name` entries and `input_template_version` entries used by the model's input-validation and run-metadata workflow.
 
 ## Reproducibility Notes
 
@@ -199,7 +198,7 @@ The repository includes `CITATION.cff` so GitHub can display citation metadata a
 The simulation code and input data used to support the analyses in this study are available at:
 
 ```text
-https://github.com/Jerry-Xcq/china-vehicle-carbon-transition-omega
+https://github.com/Jerry-Xcq/China-tailored-policy-scenario-simulation-model
 ```
 
 The repository contains the China-tailored policy simulation model, the input CSV files used for the reported scenarios, and documentation describing the mapping between manuscript scenarios and model configuration files.

@@ -1,6 +1,6 @@
 cff-version: 1.2.0
 message: "If you use this model or input dataset, please cite the repository and the associated manuscript."
-title: "China vehicle carbon-transition policy simulation model"
+title: "China-tailored policy-scenario simulation model"
 authors:
   - family-names: Xu
     given-names: Jiarui
@@ -8,7 +8,7 @@ authors:
     given-names: Haobing
 year: 2026
 license: MIT
-repository-code: "https://github.com/Jerry-Xcq/china-vehicle-carbon-transition-omega"
+repository-code: "https://github.com/Jerry-Xcq/China-tailored-policy-scenario-simulation-model"
 preferred-citation:
   type: article
   title: "Compliance architecture and upstream coupling shape China's vehicle carbon transition"
