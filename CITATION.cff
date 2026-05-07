@@ -9,14 +9,3 @@ authors:
 year: 2026
 license: MIT
 repository-code: "https://github.com/Jerry-Xcq/China-tailored-policy-scenario-simulation-model"
-preferred-citation:
-  type: article
-  title: "Compliance architecture and upstream coupling shape China's vehicle carbon transition"
-  authors:
-    - family-names: Xu
-      given-names: Jiarui
-    - family-names: Liu
-      given-names: Haobing
-  journal: "Nature Sustainability"
-  year: 2026
-  notes: "Submitted manuscript"

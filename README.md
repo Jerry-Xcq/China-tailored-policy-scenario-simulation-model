@@ -4,7 +4,6 @@ This repository contains the China-tailored LDV policy simulation model and inpu
 
 **Compliance architecture and upstream coupling shape China's vehicle carbon transition**  
 Jiarui Xu and Haobing Liu  
-Submitted to *Nature Sustainability*
 
 The model reconstructs China's light-duty vehicle compliance architecture for the analyses reported in the paper, including CAFC-CO2 target generation, NEV credit requirements, upstream fuel and electricity coupling, manufacturer compliance search, credit banking, credit settlement, and post-processing outputs.
 
@@ -79,6 +78,16 @@ Final_2_out_china_credit_012_targetmax/
 ```
 
 The output directory contains model logs, input-file metadata, manufacturer annual data, credit-settlement outputs, new-vehicle price outputs and post-processing figures/tables.
+
+## Additional Resource
+
+An interactive project page and web front end for this model are available at:
+
+```text
+https://jerry-xcq.github.io/CN_Carbon_Emission_Policy_Simulation_Model/
+```
+
+This page is provided for demonstration and exploration.
 
 ## Scenario and Tier Mapping
 
@@ -187,22 +196,8 @@ Dates embedded in input filenames are file labels and should not be interpreted 
 
 ## Citation
 
-If you use this code or input dataset, please cite both the repository and the manuscript:
-
-Xu, J. and Liu, H. *Compliance architecture and upstream coupling shape China's vehicle carbon transition*. Submitted to *Nature Sustainability*.
-
 The repository includes `CITATION.cff` so GitHub can display citation metadata automatically.
-
-## Suggested Availability Statement
-
-The simulation code and input data used to support the analyses in this study are available at:
-
-```text
-https://github.com/Jerry-Xcq/China-tailored-policy-scenario-simulation-model
-```
-
-The repository contains the China-tailored policy simulation model, the input CSV files used for the reported scenarios, and documentation describing the mapping between manuscript scenarios and model configuration files.
 
 ## License
 
-The software code in this repository is released under the MIT License. Input data in `omega_model/test_inputs/` are provided to support scholarly reproduction of the submitted manuscript; users should cite the manuscript and repository when reusing them. If additional source-specific restrictions are later identified for any input table, document them next to the affected file before publication.
+The software code in this repository is released under the MIT License. Input data in `omega_model/test_inputs/` are provided to support scholarly reproduction and reuse subject to any source-specific restrictions. If additional source-specific restrictions are later identified for any input table, document them next to the affected file before publication.
