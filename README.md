@@ -171,8 +171,6 @@ Upstream fuel and electricity carbon-emission factors are configured in:
 omega_model/test_inputs/policy_fuels_20230711.csv
 ```
 
-For electricity sensitivity cases, edit the `upstream_co2e_grams_per_unit` values for rows where `fuel_id` is `electricity`.
-
 ## Input Data Description
 
 The `omega_model/test_inputs/` directory contains all input data required by the released model configuration. Key groups include:

@@ -1,6 +1,7 @@
 cff-version: 1.2.0
 message: "If you use this model or input dataset, please cite the repository and the associated manuscript."
 title: "China-tailored policy-scenario simulation model"
+version: "v2.0.1"
 authors:
   - family-names: Xu
     given-names: Jiarui

@@ -1242,10 +1242,15 @@ class Vehicle(OMEGABase):
 
         # add upstream calcs
         upstream_method = UpstreamMethods.get_upstream_method(self.model_year)
+        weight__uf = True
+        upstream_kwh_per_mile = cloud['cert_direct_kwh_per_mile']
+        if weight__uf and self.fueling_class == 'PHEV':
+            # The charge-depleting electricity rate applies only to the UF share of miles.
+            upstream_kwh_per_mile = upstream_kwh_per_mile * cloud['cert_utility_factor']
 
         cloud['cert_indirect_co2e_grams_per_mile'] = \
             upstream_method(self, cloud['cert_direct_co2e_grams_per_mile'],
-                            cloud['cert_direct_kwh_per_mile'])
+                            upstream_kwh_per_mile)
 
         cloud['cert_co2e_grams_per_mile'] = \
             cloud['cert_direct_co2e_grams_per_mile'] + \

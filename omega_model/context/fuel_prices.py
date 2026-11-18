@@ -63,6 +63,8 @@ print('importing %s' % __file__)
 
 from omega_model import *
 
+ENERGY_PRICE_SCENARIO = ('AEO2021', 'High oil price')
+
 
 class FuelPrice(OMEGABase):
     """
@@ -109,12 +111,13 @@ class FuelPrice(OMEGABase):
             if type(price_types) is not list:
                 price_types = [price_types]
 
+            context_id, case_id = ENERGY_PRICE_SCENARIO
             prices = []
             for pt in price_types:
                 prices.append(
                     FuelPrice._data[
-                        omega_globals.options.context_id,
-                        omega_globals.options.context_case_id,
+                        context_id,
+                        case_id,
                         fuel_id,
                         calendar_year
                     ][pt]
@@ -162,20 +165,18 @@ class FuelPrice(OMEGABase):
                                                              verbose=verbose)
 
         if not template_errors:
-            from context.new_vehicle_market import NewVehicleMarket
             from context.onroad_fuels import OnroadFuel
 
             # validate columns
-            validation_dict = {'context_id': NewVehicleMarket.context_ids,
-                               'case_id': NewVehicleMarket.context_case_ids,
-                               'fuel_id': OnroadFuel.fuel_ids,
-                               }
+            validation_dict = {'fuel_id': OnroadFuel.fuel_ids}
 
             template_errors += validate_dataframe_columns(df, validation_dict, filename)
 
         if not template_errors:
-            df = df.loc[(df['context_id'] == omega_globals.options.context_id) &
-                        (df['case_id'] == omega_globals.options.context_case_id), :]
+            context_id, case_id = ENERGY_PRICE_SCENARIO
+            df = df.loc[(df['context_id'] == context_id) & (df['case_id'] == case_id)].copy()
+            if df.empty:
+                return [f'{filename} has no fuel prices for {context_id} / {case_id}']
             aeo_dollar_basis = df['dollar_basis'].mean()
             cols_to_convert = [col for col in df.columns if 'dollars_per_unit' in col]
 

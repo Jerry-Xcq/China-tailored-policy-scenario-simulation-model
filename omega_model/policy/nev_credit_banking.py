@@ -44,7 +44,7 @@ from omega_model import *
 
 
 
-MG_PER_NEV_POINT = 1.0  # 1 NEV 积分 = 1 Mg CO2（占位符）
+MG_PER_NEV_POINT = 1.0  # Assumed 1:1 NEV-to-GHG credit offset (1 GHG credit = 1 Mg CO2e)
 
 
 NEV_CARRYFORWARD_YEARS = 3   # 正积分可结转年限
